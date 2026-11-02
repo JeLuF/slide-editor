@@ -1,6 +1,6 @@
 {
   "name": "slide-editor",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Embeddable slide / announcement-screen editor for the browser, with a shared document core for server-side PNG/SVG rendering and MCP tools for AI agents.",
   "keywords": [
     "slides",
@@ -17,7 +17,7 @@
   ],
   "license": "0BSD",
   "author": "JeLuF",
-  "homepage": "https://github.com/JeLuF/slide-editor",
+  "homepage": "https://jeluf.github.io/slide-editor/",
   "bugs": "https://github.com/JeLuF/slide-editor/issues",
   "repository": {
     "type": "git",

@@ -6,6 +6,9 @@ A small, embeddable editor for single slides / announcement screens, built on [F
 
 ![Example slide](docs/images/be-right-back.jpg)
 
+## Demo site
+You can test slide-editor on its [demo site](https://jeluf.github.io/slide-editor/). You can use the [demo slides](examples/slides/) or start your own slides. The demo site also shows how the editor can be styled.
+
 ## Install
 
 ```bash
