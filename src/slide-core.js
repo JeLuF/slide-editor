@@ -1470,11 +1470,24 @@
     }
 
     async _ensureFonts(objs) {
-      if (typeof document === "undefined" || !document.fonts) return;
       const texts = (objs || this._canvas.getObjects()).filter(
         (o) => o instanceof this.F.FabricText,
       );
       if (!texts.length) return;
+      if (typeof document === "undefined" || !document.fonts) {
+        // No browser: fonts are registered up front. Saved text sizes were measured elsewhere,
+        // so measure again the texts whose font is installed here.
+        const have = this.opts.availableFonts;
+        if (Array.isArray(have)) {
+          const names = new Set(have.map((f) => String(f).toLowerCase()));
+          this._remeasureTexts(
+            texts.filter((t) =>
+              names.has(firstFamily(t.fontFamily).toLowerCase()),
+            ),
+          );
+        }
+        return;
+      }
       // The @font-face rules must exist before document.fonts.load() can find a font.
       const timeout = (ms) => new Promise((r) => setTimeout(r, ms));
       await Promise.race([Promise.all(this._fontSheets), timeout(5000)]);

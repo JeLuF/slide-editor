@@ -110,7 +110,10 @@ function createSlideTools(options) {
       throw userError(
         'Slide "' + slideId + '" does not exist. Create it with create_slide.',
       );
-    return S.loadSlide(json);
+    return S.loadSlide(
+      json,
+      o.googleFonts ? { googleFonts: o.googleFonts } : undefined,
+    );
   }
 
   /** Load, change, save. Returns the change result plus the slide's current layout issues. */

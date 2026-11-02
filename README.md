@@ -7,6 +7,7 @@ A small, embeddable editor for single slides / announcement screens, built on [F
 ![Example slide](docs/images/be-right-back.jpg)
 
 ## Demo site
+
 You can test slide-editor on its [demo site](https://jeluf.github.io/slide-editor/). You can use the [demo slides](examples/slides/) or start your own slides. The demo site also shows how the editor can be styled.
 
 ## Install
@@ -156,6 +157,7 @@ Invalid input throws an error that says what to do instead (e.g. `Unknown proper
 ```js
 const {
   registerFont,
+  prepareFonts,
   createSlide,
   loadSlide,
   renderPNG,
@@ -177,6 +179,27 @@ saveToDb(doc.toJSON());
 
 - Rendering uses `node-canvas` (prebuilt for Linux, macOS and Windows on x64 and ARM; Alpine needs build tools). A 1920×1080 slide renders in about 0.2–0.6 s and matches the browser to within anti-aliasing.
 - **Fonts:** register every font your slides use, as **.ttf or .otf** files (WOFF/WOFF2 web fonts don't work with node-canvas; Google Fonts offers TTF downloads). Unregistered fonts fall back to a default font, which changes text measurements; `describe()` reports them as `font-missing`.
+- **Google Fonts imported in the editor** are saved in the slide JSON (`fonts: [{ name, google: 'Inter:wght@400;700' }]`). To render them on the server, pass `googleFonts` (or call `prepareFonts` yourself) before the slide is loaded:
+
+  ```js
+  const googleFonts = { cacheDir: "/var/cache/slide-fonts" };
+  const png = await renderPNG(slideJson, { googleFonts }); // also renderSVG(json, { googleFonts })
+  const doc = await loadSlide(slideJson, { googleFonts });
+  await prepareFonts(slideJson, googleFonts); // or prepare once, then load as usual
+  ```
+
+  `prepareFonts(json, options)` downloads the TrueType files, registers them under the font name the slide uses and resolves to `{ loaded: [family], failed: [{ family, error }] }`. A font that cannot be fetched does not fail the render: the text falls back and `describe()` reports `font-missing` with the family. Fonts are only fetched when you ask for it; without `googleFonts` a slide with Google fonts renders with fallbacks.
+
+  | Option                   | Default      | Meaning                                                                                                                                                                                 |
+  | ------------------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `cacheDir`               | temp folder  | Where files are kept, per family, weight and style. Cached fonts are registered without any network access. Without `cacheDir` a temp folder of the process is used and deleted at exit |
+  | `fetch`                  | global fetch | Used for every request (proxy, test double)                                                                                                                                             |
+  | `timeoutMs`              | `10000`      | Per request                                                                                                                                                                             |
+  | `maxBytes`               | 8 MiB        | Per font file                                                                                                                                                                           |
+  | `maxFamilies`/`maxFiles` | `8` / `40`   | Per slide                                                                                                                                                                               |
+
+  Notes: Google serves TrueType (not WOFF2) to requests whose user agent is not a browser; the module sends `slide-editor`. Ranges such as `wght@100..800` are served as one file per weight. Fonts are registered once per process, so a changed font file needs a restart. Slides come from users, so the module only calls `fonts.googleapis.com` and `fonts.gstatic.com` through your `fetch` (redirects are refused), validates the family and axis list before building a URL, checks that downloads are font files, and never writes outside `cacheDir`. On a host without network access, fill `cacheDir` once and ship it with the app.
+
 - Icon search and remote images use `fetch` (Node 18+). Remote images are embedded into the slide.
 
 ## MCP tools
@@ -191,6 +214,7 @@ const tools = createSlideTools({
     save: async (slideId, json) => db.putSlide(slideId, json),
   },
   previewMaxWidth: 960,
+  googleFonts: { cacheDir: "/var/cache/slide-fonts" }, // optional: render imported Google Fonts, see above
 });
 // tools: [{ name, description, inputSchema (JSON Schema), handler(args) → CallToolResult }]
 ```

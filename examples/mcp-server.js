@@ -68,7 +68,11 @@ const store = {
 };
 
 // --- MCP wiring --------------------------------------------------------------
-const tools = createSlideTools({ store });
+// GOOGLE_FONTS_CACHE=./font-cache downloads Google Fonts used in slides (imported in the editor) once and keeps them there.
+const googleFonts = process.env.GOOGLE_FONTS_CACHE
+  ? { cacheDir: process.env.GOOGLE_FONTS_CACHE }
+  : undefined;
+const tools = createSlideTools({ store, googleFonts });
 const server = new Server(
   { name: "slides", version: "1.0.0" },
   { capabilities: { tools: {} } },

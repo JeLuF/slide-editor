@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-11-03
+
+- **Node:** Google Fonts imported in the editor now render on the server. `prepareFonts(json, { cacheDir, fetch, timeoutMs, maxBytes, … })` downloads the TrueType files, caches them per family, weight and style and registers them under the slide's font name; `loadSlide`, `renderPNG` and `renderSVG` take `googleFonts` to do this first, and `createSlideTools({ googleFonts })` does the same for the MCP tools. Only the Google hosts are contacted, specs are validated, downloads have a timeout and a size limit. A failed download falls back as before and `describe()` still reports `font-missing`; registered fonts are no longer reported. Saved text sizes are measured again on load for fonts that are installed on the server.
 
 - **Editor:** no horizontal scrollbar in the side panel (button groups shrink to fit); scrollbars follow the panel colors in light and dark themes.
 - **Editor:** the font menu ends with "+ Import fonts…". Paste the `@import` (or `<link>`) code from fonts.google.com and all its fonts join the menu. Imported fonts are saved in the slide JSON (`fonts`) and loaded again by `load()`. New core method `importFonts(code)` and `SlideCore.parseFontImport(code)`.

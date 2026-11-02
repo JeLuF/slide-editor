@@ -153,3 +153,45 @@ test("search_icons", async () => {
   assert.equal(r.value.icons[0].id, "credit:star");
   assert.equal(r.value.icons[0].creditRequired, true);
 });
+
+test("render_slide prepares Google Fonts when the host passes googleFonts", async () => {
+  const fs = require("fs");
+  const os = require("os");
+  const path = require("path");
+  const ttf = fs.readFileSync(
+    path.join(__dirname, "fixtures", "BebasNeue-Regular.ttf"),
+  );
+  const calls = [];
+  const fetch = async (url) => {
+    calls.push(url);
+    const css = new URL(url).hostname === "fonts.googleapis.com";
+    const body = css
+      ? Buffer.from(
+          "@font-face{font-family:'Mcp Face';font-weight:400;font-style:normal;src:url(https://fonts.gstatic.com/s/mcp.ttf) format('truetype')}",
+        )
+      : ttf;
+    return {
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      arrayBuffer: async () => body,
+    };
+  };
+  const store = memoryStore();
+  const tools = createSlideTools({
+    store,
+    googleFonts: {
+      cacheDir: fs.mkdtempSync(path.join(os.tmpdir(), "se-mcp-")),
+      fetch,
+    },
+  });
+  const t = Object.fromEntries(tools.map((x) => [x.name, x]));
+  await t.create_slide.handler({ slideId: "g", width: 400, height: 200 });
+  const json = JSON.parse(JSON.stringify(await store.load("g")));
+  json.fonts = [{ name: "Mcp Face", google: "Mcp Face" }];
+  await store.save("g", json);
+  const r = await t.describe_slide.handler({ slideId: "g" });
+  assert.ok(!r.isError);
+  assert.ok(calls.length >= 2);
+  assert.ok(calls.every((u) => /fonts\.(googleapis|gstatic)\.com/.test(u)));
+});
