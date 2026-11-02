@@ -5,4 +5,6 @@ node_modules/
 examples/slides/*.json
 !examples/slides/be-right-back.json
 !examples/slides/were-coming-back.json
+!examples/slides/pink.json
+!examples/slides/gray-green.json
 examples/fonts/
