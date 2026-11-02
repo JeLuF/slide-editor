@@ -60,6 +60,39 @@
     { key: "all", label: "All sets", prefixes: [] },
   ];
 
+  const FONT_SPEC = /^[A-Za-z0-9][A-Za-z0-9 ]*(:[A-Za-z0-9@;,. ]+)?$/;
+  function isFontSpec(spec) {
+    return (
+      typeof spec === "string" && spec.length < 300 && FONT_SPEC.test(spec)
+    );
+  }
+  function googleFontsHref(spec) {
+    return (
+      "https://fonts.googleapis.com/css2?family=" +
+      spec.trim().replace(/ /g, "+") +
+      "&display=swap"
+    );
+  }
+  /** Fonts in pasted Google Fonts code: [{ name, google: 'Inter:wght@400;700' }]. */
+  function parseFontImport(code) {
+    const out = [];
+    const re = /fonts\.googleapis\.com\/css2?\?([^'")\s<]+)/g;
+    let m;
+    while ((m = re.exec(String(code || "")))) {
+      m[1].replace(/(?:^|&(?:amp;)?)family=([^&\s]+)/g, (_, raw) => {
+        let spec;
+        try {
+          spec = decodeURIComponent(raw.replace(/\+/g, " ")).trim();
+        } catch (e) {
+          return;
+        }
+        if (isFontSpec(spec) && !out.some((f) => f.google === spec))
+          out.push({ name: spec.split(":")[0].trim(), google: spec });
+      });
+    }
+    return out;
+  }
+
   const DEFAULT_FONTS = [
     "Arial",
     "Helvetica",
@@ -933,6 +966,7 @@
       );
       if (!this.fonts.length) this.fonts.push({ name: "Arial" });
       this._fontSheets = [];
+      this.importedFonts = []; // [{ name, google }] added by importFonts(); saved in the slide JSON
       this._listeners = {};
       this._suspend = 0;
       this._batch = 0;
@@ -1614,8 +1648,45 @@
           fill: this._specToPublic(this._bg.spec),
           opacity: this._bg.opacity,
         },
+        fonts: this.importedFonts.map((f) => Object.assign({}, f)),
         canvas: this._canvas.toObject(SE_PROPS),
       };
+    }
+
+    /**
+     * Add Google Fonts from the code of the Google Fonts page (the <style>@import …</style>
+     * or <link href> snippet). The fonts join the font menu and are saved with the slide.
+     * Returns the font names that were found.
+     */
+    importFonts(code) {
+      const found = parseFontImport(code);
+      if (!found.length)
+        throw new Error(
+          "No Google Fonts found. Paste the code from fonts.google.com (\"Get embed code\"), e.g. @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');",
+        );
+      this._addGoogleFonts(found);
+      this._commit();
+      this._renderPanel();
+      return found.map((f) => f.name);
+    }
+
+    _addGoogleFonts(list) {
+      list.forEach((f) => {
+        if (!isFontSpec(f && f.google)) return;
+        const name = f.google.split(":")[0].trim();
+        const prev = this.importedFonts.find((x) => x.name === name);
+        if (prev && prev.google === f.google) return;
+        if (prev) prev.google = f.google;
+        else this.importedFonts.push({ name, google: f.google });
+        if (!this.fonts.some((x) => x.name === name))
+          this.fonts.push({ name, google: true });
+        this._fontSheets.push(this._loadFontSheet(googleFontsHref(f.google)));
+      });
+    }
+
+    /** Hook: the editor loads the stylesheet in the page. Returns a promise. */
+    _loadFontSheet() {
+      return Promise.resolve();
     }
 
     async _restore(json) {
@@ -1633,6 +1704,7 @@
       try {
         if (this._canvas.discardActiveObject)
           this._canvas.discardActiveObject();
+        if (Array.isArray(data.fonts)) this._addGoogleFonts(data.fonts);
         await this._canvas.loadFromJSON(data.canvas);
         const bs = data.backgroundStyle;
         this._bg = bs
@@ -3094,6 +3166,7 @@
     PROPS,
     DEFAULT_ICON_FILTERS,
     DEFAULT_FONTS,
+    parseFontImport,
     /** Create a headless slide document. */
     create(options) {
       return new Doc(options);

@@ -61,7 +61,8 @@
 .se-stage canvas.lower-canvas{background:repeating-conic-gradient(#d4d4d8 0 25%,#fafafa 0 50%) 0 0/16px 16px}
 .se-stage.se-drop::after{content:attr(data-drop);position:absolute;inset:10px;border:2px dashed var(--se-accent);border-radius:10px;display:flex;align-items:center;
   justify-content:center;color:var(--se-accent);font-weight:600;background:color-mix(in srgb,var(--se-accent) 10%,transparent);pointer-events:none}
-.se-panel{width:268px;flex:none;background:var(--se-surface);border-left:1px solid var(--se-border);overflow-y:auto}
+.se-panel{width:268px;flex:none;background:var(--se-surface);border-left:1px solid var(--se-border);overflow-y:auto;overflow-x:hidden}
+.se-panel,.se-igrid,.se-pop{scrollbar-color:var(--se-border) var(--se-surface)}
 .se-narrow .se-body{flex-direction:column}
 .se-narrow .se-panel{width:auto;border-left:0;border-top:1px solid var(--se-border);height:42%}
 .se-sec{padding:12px 14px;border-bottom:1px solid var(--se-border)}
@@ -78,11 +79,15 @@
 .se-root input[type=checkbox]{accent-color:var(--se-accent);width:15px;height:15px;margin:0}
 .se-val{width:38px;flex:none;text-align:right;color:var(--se-muted);font-variant-numeric:tabular-nums}
 .se-group{display:inline-flex;gap:2px;background:var(--se-bg);border-radius:7px;padding:2px}
-.se-group .se-btn{height:28px;min-width:26px;padding:0 4px}
+.se-group{max-width:100%}
+.se-group .se-btn{height:28px;min-width:0;max-width:32px;flex:1 1 0;padding:0 2px}
 .se-glyph{font-weight:700;font-family:Georgia,"Times New Roman",serif;font-size:15px}
 .se-hint{color:var(--se-muted);font-size:12px;margin:2px 0 0}
 .se-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .se-file{display:none}
+.se-import textarea{width:100%;box-sizing:border-box;border:1px solid var(--se-border);border-radius:6px;background:var(--se-surface);color:inherit;font:12px/1.4 monospace;padding:6px;resize:vertical}
+.se-import .se-error{color:#dc2626}
+.se-root select option.se-import-opt{font-weight:600}
 .se-btn .se-caret{width:12px;height:12px;margin-left:-4px;opacity:.6}
 .se-split{display:inline-flex}
 .se-split>.se-btn:first-child{border-top-right-radius:0;border-bottom-right-radius:0;padding-right:4px;gap:3px}
@@ -624,20 +629,42 @@
 
     _prepareFonts(fonts, google) {
       this._fontSheets = [];
-      const list = (fonts || []).map((f) =>
-        typeof f === "string" ? { name: f } : f,
-      );
+      const web = typeof document !== "undefined";
+      const googleHref = (spec) =>
+        "https://fonts.googleapis.com/css2?family=" +
+        String(spec).trim().replace(/ /g, "+") +
+        "&display=swap";
+      const faceFiles = (f) => f.files || (f.url ? [{ url: f.url }] : []);
+      const list = (fonts || []).map((f) => {
+        if (typeof f === "string") return { name: f };
+        if (!f || !f.name) throw new Error('Font entries need a "name"');
+        if (web) {
+          if (f.google)
+            this._fontSheets.push(
+              loadStylesheet(googleHref(f.google === true ? f.name : f.google)),
+            );
+          faceFiles(f).forEach((file) => {
+            if (!file.url) throw new Error('Font files need a "url"');
+            const face = new FontFace(
+              f.name,
+              "url(" + JSON.stringify(file.url) + ")",
+              {
+                weight: String(file.weight || 400),
+                style: file.style || "normal",
+              },
+            );
+            document.fonts.add(face);
+            this._fontSheets.push(face.load().catch(() => null));
+          });
+        }
+        return { name: f.name };
+      });
+      // Legacy option: googleFonts are put in front of the list.
       (google || []).forEach((spec) => {
         const name = String(spec).split(":")[0].trim();
         if (!list.some((f) => f.name === name))
           list.unshift({ name, google: true });
-        if (typeof document !== "undefined") {
-          const href =
-            "https://fonts.googleapis.com/css2?family=" +
-            String(spec).trim().replace(/ /g, "+") +
-            "&display=swap";
-          this._fontSheets.push(loadStylesheet(href));
-        }
+        if (web) this._fontSheets.push(loadStylesheet(googleHref(spec)));
       });
       if (!list.length) list.push({ name: "Arial" });
       return list;
@@ -1850,6 +1877,56 @@
       );
     }
 
+    _fontImportBox(sec) {
+      const box = h("div", { class: "se-import" });
+      const ta = h("textarea", {
+        rows: 4,
+        spellcheck: "false",
+        placeholder:
+          "<style>\n@import url('https://fonts.googleapis.com/css2?family=…');\n</style>",
+        "aria-label": "Google Fonts embed code",
+      });
+      const msg = h("p", { class: "se-hint" });
+      msg.textContent =
+        "On fonts.google.com choose fonts, open “Get embed code”, select @import and paste it here.";
+      const close = () => {
+        this._fontImportOpen = false;
+        this._renderPanel();
+      };
+      const go = h(
+        "button",
+        {
+          class: "se-btn se-outline",
+          type: "button",
+          onclick: () => {
+            try {
+              this.importFonts(ta.value);
+              this._fontImportOpen = false;
+              this._renderPanel();
+            } catch (e) {
+              msg.textContent = e.message;
+              msg.classList.add("se-error");
+            }
+          },
+        },
+        "Import",
+      );
+      const cancel = h(
+        "button",
+        { class: "se-btn se-outline", type: "button", onclick: close },
+        "Cancel",
+      );
+      box.append(ta, h("div", { class: "se-actions" }, go, cancel), msg);
+      sec.appendChild(box);
+      setTimeout(() => ta.focus(), 0);
+    }
+
+    _loadFontSheet(href) {
+      return typeof document === "undefined"
+        ? Promise.resolve()
+        : loadStylesheet(href);
+    }
+
     _panelText(o) {
       const s = this._section("Text");
       const names = this.fonts.map((f) => [
@@ -1859,20 +1936,32 @@
       ]);
       const cur = firstFamily(o.fontFamily);
       if (!names.some((n) => n[0] === cur)) names.unshift([cur, cur]);
-      this._row(
-        s,
-        "Font",
-        this._dropdown(
-          names,
-          cur,
-          (v) => {
-            o.set("fontFamily", v);
-            this._ensureFonts([o]);
-            this._changed();
-          },
-          "Font family",
+      const fontSel = this._dropdown(
+        names,
+        cur,
+        (v) => {
+          if (v === IMPORT_FONTS) {
+            fontSel.value = cur;
+            this._fontImportOpen = true;
+            this._renderPanel();
+            return;
+          }
+          o.set("fontFamily", v);
+          this._ensureFonts([o]);
+          this._changed();
+        },
+        "Font family",
+      );
+      fontSel.appendChild(h("option", { disabled: true }, "──────────"));
+      fontSel.appendChild(
+        h(
+          "option",
+          { value: IMPORT_FONTS, class: "se-import-opt" },
+          "+ Import fonts…",
         ),
       );
+      this._row(s, "Font", fontSel);
+      if (this._fontImportOpen) this._fontImportBox(s);
       this._row(
         s,
         "Size",
@@ -2917,6 +3006,7 @@
     }
   }
 
+  const IMPORT_FONTS = "\u0000import-fonts";
   const sheetPromises = {};
   /** Add a stylesheet <link> once and resolve when it has loaded (or failed). */
   function loadStylesheet(href) {

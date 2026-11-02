@@ -261,3 +261,30 @@ test("works with a read-only Fabric module object (ES module namespace, bundlers
   const d = await doc.add({ type: "ngon", sides: 5, cornerRadius: 10 });
   assert.equal(d.cornerRadius, 10);
 });
+
+test("importFonts parses Google Fonts code, saves and reloads the fonts", async () => {
+  const code = `<style>
+@import url('https://fonts.googleapis.com/css2?family=Gorditas:wght@400;700&family=Metamorphous&family=Playpen+Sans:wght@100..800&family=Story+Script&display=swap');
+</style>`;
+  assert.deepEqual(
+    require("../src/slide-core.js")
+      .parseFontImport(code)
+      .map((f) => f.name),
+    ["Gorditas", "Metamorphous", "Playpen Sans", "Story Script"],
+  );
+  const doc = S.createSlide({ width: 200, height: 100 });
+  doc.importFonts(code);
+  assert.ok(doc.fonts.some((f) => f.name === "Playpen Sans"));
+  const json = doc.toJSON();
+  assert.equal(json.fonts[2].google, "Playpen Sans:wght@100..800");
+  const doc2 = S.createSlide({ width: 200, height: 100 });
+  await doc2.load(json);
+  assert.ok(doc2.fonts.some((f) => f.name === "Story Script"));
+  assert.throws(() => doc.importFonts("hello"), /No Google Fonts/);
+  assert.deepEqual(
+    require("../src/slide-core.js").parseFontImport(
+      "fonts.googleapis.com/css2?family=a%3Cscript%3E",
+    ),
+    [],
+  );
+});
