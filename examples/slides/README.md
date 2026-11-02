@@ -1,17 +1,20 @@
 # Example slides
 
-Load these into the editor (demo page → *Load JSON*) or render them on a server:
+Load these into the editor (demo page → _Load JSON_) or render them on a server:
 
 ```js
-const { registerFont, renderPNG } = require('slide-editor/node');
-registerFont('ArchivoBlack-Regular.ttf', { family: 'Archivo Black' });
-fs.writeFileSync('slide.png', await renderPNG(fs.readFileSync('be-right-back.json', 'utf8')));
+const { registerFont, renderPNG } = require("slide-editor/node");
+registerFont("ArchivoBlack-Regular.ttf", { family: "Archivo Black" });
+fs.writeFileSync(
+  "slide.png",
+  await renderPNG(fs.readFileSync("be-right-back.json", "utf8")),
+);
 ```
 
-| File | Size | Notes |
-|---|---|---|
-| `were-coming-back.json` | 1920×1080 | gradient light streaks, text with a tilted letter |
-| `be-right-back.json` | 1920×1080 | starfield, blob bands, emoji illustrations, outlined text |
+| File                    | Size      | Notes                                                     |
+| ----------------------- | --------- | --------------------------------------------------------- |
+| `were-coming-back.json` | 1920×1080 | gradient light streaks, text with a tilted letter         |
+| `be-right-back.json`    | 1920×1080 | starfield, blob bands, emoji illustrations, outlined text |
 
 Both use the free font [Archivo Black](https://fonts.google.com/specimen/Archivo+Black) (SIL Open Font License), which is not included: load it in the browser (`googleFonts: ['Archivo Black']`) and register its TTF file on a server.
 

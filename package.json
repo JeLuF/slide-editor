@@ -17,6 +17,12 @@
   ],
   "license": "0BSD",
   "author": "JeLuF",
+  "homepage": "https://github.com/JeLuF/slide-editor",
+  "bugs": "https://github.com/JeLuF/slide-editor/issues",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:JeLuF/slide-editor.git"
+  },
   "exports": {
     "./core": "./src/slide-core.js",
     "./editor": "./src/slide-editor.js",
@@ -33,7 +39,8 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "mcp": "node examples/mcp-server.js",
-    "pack:check": "npm pack --dry-run"
+    "pack:check": "npm pack --dry-run",
+    "format": "npx prettier --write ."
   },
   "engines": {
     "node": ">=18"

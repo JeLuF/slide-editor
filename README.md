@@ -15,15 +15,15 @@ npm install slide-editor fabric canvas jsdom   # server rendering / MCP tools
 
 `fabric` is a peer dependency (bring v6 or v7); `canvas` and `jsdom` are only needed on a server.
 
-| Import | File | Where | What |
-|---|---|---|---|
-| `slide-editor/core` | `src/slide-core.js` | browser + Node | The document model: everything except the user interface, plus the ID-based API for automation |
-| `slide-editor/editor` | `src/slide-editor.js` | browser | The visual editor, built on the core |
-| `slide-editor/node` | `src/slide-node.js` | Node | Server helper: fonts, create/load slides, render PNG/SVG |
-| `slide-editor/mcp` | `src/slide-mcp-tools.js` | Node | Ready-made MCP tool definitions (JSON schemas + handlers) |
-| | `examples/mcp-server.js` | Node | A complete MCP server (stdio) using the tools |
-| | `examples/slides/` | | Two example slides |
-| | `docs/index.html` | browser | Demo page (not part of the npm package) |
+| Import                | File                     | Where          | What                                                                                           |
+| --------------------- | ------------------------ | -------------- | ---------------------------------------------------------------------------------------------- |
+| `slide-editor/core`   | `src/slide-core.js`      | browser + Node | The document model: everything except the user interface, plus the ID-based API for automation |
+| `slide-editor/editor` | `src/slide-editor.js`    | browser        | The visual editor, built on the core                                                           |
+| `slide-editor/node`   | `src/slide-node.js`      | Node           | Server helper: fonts, create/load slides, render PNG/SVG                                       |
+| `slide-editor/mcp`    | `src/slide-mcp-tools.js` | Node           | Ready-made MCP tool definitions (JSON schemas + handlers)                                      |
+|                       | `examples/mcp-server.js` | Node           | A complete MCP server (stdio) using the tools                                                  |
+|                       | `examples/slides/`       |                | Two example slides                                                                             |
+|                       | `docs/index.html`        | browser        | Demo page (not part of the npm package)                                                        |
 
 ## Browser setup
 
@@ -36,7 +36,7 @@ Without a bundler (script tags, e.g. from jsDelivr):
 
 <div id="editor" style="height: 640px"></div>
 <script>
-  const editor = SlideEditor.create('#editor', { width: 1920, height: 1080 });
+  const editor = SlideEditor.create("#editor", { width: 1920, height: 1080 });
 </script>
 ```
 
@@ -45,30 +45,30 @@ The container must have a height; the editor fills it and scales the slide to fi
 With a bundler:
 
 ```js
-import * as fabric from 'fabric';
-import SlideEditor from 'slide-editor/editor';
+import * as fabric from "fabric";
+import SlideEditor from "slide-editor/editor";
 const editor = SlideEditor.create(el, { width: 1920, height: 1080, fabric });
 ```
 
 ## Options
 
-| Option | Default | |
-|---|---|---|
-| `width`, `height` | `1920`, `1080` | Size of the slide in pixels (= size of the exported image) |
-| `background` | `'#ffffff'` | Color, `'transparent'`, or `{ type: 'linear' \| 'radial', colors: [c1, c2], angle }` |
-| `backgroundOpacity` | `1` | Overall background opacity 0–1, multiplied with the colors' own alpha |
-| `fonts` | web-safe list | Font names offered in the font menu. Load web fonts yourself, or use `googleFonts` |
-| `googleFonts` | `[]` | Google Fonts specs, e.g. `['Bebas Neue', 'Inter:wght@400;700', 'Playfair Display:ital,wght@0,400;0,700;1,400']`. Include the bold/italic variants you want; otherwise the browser fakes them |
-| `theme` | `'light'` | `'light'`, `'dark'` or `'auto'` (follows the OS) |
-| `colors` | built-in | UI colors, see [UI colors](#ui-colors) |
-| `historyLimit` | `60` | Undo steps |
-| `imageMaxSize` | 1.5 × longest slide side | Uploaded images larger than this are downscaled (keeps JSON small) |
-| `defaultTextColor` | auto | `null` picks black or white depending on the background |
-| `defaultShapeColor` | `'#2563eb'` | |
-| `defaultIconColor` | auto | Color of newly added single-color icons; `null` picks black or white depending on the background |
-| `icons` | `true` | Icon search. `false` hides the button. Or `{ api: 'https://icons.example.com', filters: [{ key: 'icons', label: 'Icons', prefixes: ['mdi', 'ph'] }, …] }` to use your own Iconify server or set lists |
-| `fabric` | `window.fabric` | Pass the Fabric module when not using the global build |
-| `onChange` | – | Same as `editor.on('change', fn)` |
+| Option              | Default                  |                                                                                                                                                                                                       |
+| ------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`, `height`   | `1920`, `1080`           | Size of the slide in pixels (= size of the exported image)                                                                                                                                            |
+| `background`        | `'#ffffff'`              | Color, `'transparent'`, or `{ type: 'linear' \| 'radial', colors: [c1, c2], angle }`                                                                                                                  |
+| `backgroundOpacity` | `1`                      | Overall background opacity 0–1, multiplied with the colors' own alpha                                                                                                                                 |
+| `fonts`             | web-safe list            | Font names offered in the font menu. Load web fonts yourself, or use `googleFonts`                                                                                                                    |
+| `googleFonts`       | `[]`                     | Google Fonts specs, e.g. `['Bebas Neue', 'Inter:wght@400;700', 'Playfair Display:ital,wght@0,400;0,700;1,400']`. Include the bold/italic variants you want; otherwise the browser fakes them          |
+| `theme`             | `'light'`                | `'light'`, `'dark'` or `'auto'` (follows the OS)                                                                                                                                                      |
+| `colors`            | built-in                 | UI colors, see [UI colors](#ui-colors)                                                                                                                                                                |
+| `historyLimit`      | `60`                     | Undo steps                                                                                                                                                                                            |
+| `imageMaxSize`      | 1.5 × longest slide side | Uploaded images larger than this are downscaled (keeps JSON small)                                                                                                                                    |
+| `defaultTextColor`  | auto                     | `null` picks black or white depending on the background                                                                                                                                               |
+| `defaultShapeColor` | `'#2563eb'`              |                                                                                                                                                                                                       |
+| `defaultIconColor`  | auto                     | Color of newly added single-color icons; `null` picks black or white depending on the background                                                                                                      |
+| `icons`             | `true`                   | Icon search. `false` hides the button. Or `{ api: 'https://icons.example.com', filters: [{ key: 'icons', label: 'Icons', prefixes: ['mdi', 'ph'] }, …] }` to use your own Iconify server or set lists |
+| `fabric`            | `window.fabric`          | Pass the Fabric module when not using the global build                                                                                                                                                |
+| `onChange`          | –                        | Same as `editor.on('change', fn)`                                                                                                                                                                     |
 
 ## Editor API
 
@@ -151,16 +151,24 @@ Invalid input throws an error that says what to do instead (e.g. `Unknown proper
 ## Server rendering (Node.js)
 
 ```js
-const { registerFont, createSlide, loadSlide, renderPNG, renderSVG, toImageBuffer, toSVGString } = require('slide-editor/node');
+const {
+  registerFont,
+  createSlide,
+  loadSlide,
+  renderPNG,
+  renderSVG,
+  toImageBuffer,
+  toSVGString,
+} = require("slide-editor/node");
 
-registerFont('fonts/ArchivoBlack-Regular.ttf', { family: 'Archivo Black' });   // same names as in the editor
+registerFont("fonts/ArchivoBlack-Regular.ttf", { family: "Archivo Black" }); // same names as in the editor
 
-const png = await renderPNG(slideJson);                    // Buffer, 1920×1080
-const preview = await renderPNG(slideJson, { maxWidth: 640, format: 'jpeg' });
-const svg = await renderSVG(slideJson);                    // fonts embedded
+const png = await renderPNG(slideJson); // Buffer, 1920×1080
+const preview = await renderPNG(slideJson, { maxWidth: 640, format: "jpeg" });
+const svg = await renderSVG(slideJson); // fonts embedded
 
-const doc = await loadSlide(slideJson);                    // or createSlide({ width, height, background })
-doc.update('title', { text: 'Back at 20:15' });
+const doc = await loadSlide(slideJson); // or createSlide({ width, height, background })
+doc.update("title", { text: "Back at 20:15" });
 saveToDb(doc.toJSON());
 ```
 
@@ -173,37 +181,44 @@ saveToDb(doc.toJSON());
 `slide-editor/mcp` turns the automation API into MCP tools. You provide storage; the tools load the slide JSON, apply the change, save it back and return the result (plus layout issues). Open editors pick up the saved JSON as usual.
 
 ```js
-const { createSlideTools } = require('slide-editor/mcp');
+const { createSlideTools } = require("slide-editor/mcp");
 const tools = createSlideTools({
   store: {
-    load: async slideId => db.getSlide(slideId),            // JSON (string or object) or null
-    save: async (slideId, json) => db.putSlide(slideId, json)
+    load: async (slideId) => db.getSlide(slideId), // JSON (string or object) or null
+    save: async (slideId, json) => db.putSlide(slideId, json),
   },
-  previewMaxWidth: 960
+  previewMaxWidth: 960,
 });
 // tools: [{ name, description, inputSchema (JSON Schema), handler(args) → CallToolResult }]
 ```
 
-| Tool | Does |
-|---|---|
-| `create_slide` | new empty slide (size, background) |
-| `describe_slide` | elements with ids, positions, text, colors + layout issues |
-| `add_element` | text, shape, polygon, blob, image, icon or SVG |
-| `update_element` | any property by id or name |
-| `remove_element`, `duplicate_element` | |
-| `set_background` | color or gradient, opacity |
-| `set_fields` | fill named text elements (templates) |
-| `render_slide` | JPEG/PNG preview image for the agent to look at |
-| `search_icons` | Iconify search; ids for `add_element` |
+| Tool                                  | Does                                                       |
+| ------------------------------------- | ---------------------------------------------------------- |
+| `create_slide`                        | new empty slide (size, background)                         |
+| `describe_slide`                      | elements with ids, positions, text, colors + layout issues |
+| `add_element`                         | text, shape, polygon, blob, image, icon or SVG             |
+| `update_element`                      | any property by id or name                                 |
+| `remove_element`, `duplicate_element` |                                                            |
+| `set_background`                      | color or gradient, opacity                                 |
+| `set_fields`                          | fill named text elements (templates)                       |
+| `render_slide`                        | JPEG/PNG preview image for the agent to look at            |
+| `search_icons`                        | Iconify search; ids for `add_element`                      |
 
 With the official SDK's low-level server (`@modelcontextprotocol/sdk`), wiring is two handlers; `examples/mcp-server.js` is a complete stdio server with file storage and a fonts folder (`npm run mcp` in a checkout):
 
 ```js
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }))
+  tools: tools.map(({ name, description, inputSchema }) => ({
+    name,
+    description,
+    inputSchema,
+  })),
 }));
-server.setRequestHandler(CallToolRequestSchema, async req =>
-  tools.find(t => t.name === req.params.name).handler(req.params.arguments || {}));
+server.setRequestHandler(CallToolRequestSchema, async (req) =>
+  tools
+    .find((t) => t.name === req.params.name)
+    .handler(req.params.arguments || {}),
+);
 ```
 
 Saving is last-write-wins: if a person edits the same slide in the editor while an agent changes it, the later save replaces the earlier one. Reload the slide in the editor (or lock it) when the backend changes it.
@@ -211,7 +226,7 @@ Saving is last-write-wins: if a person edits the same slide in the editor while 
 ## Using the editor
 
 - Double-click an image (or press **Crop** in the panel) to crop. Drag the dashed frame or its handles, then **Enter** to apply or **Esc** to cancel. The original image is kept, so **Reset crop** restores it.
-- **Polygons:** the polygon button adds a shape with the last-used number of corners; the arrow next to it picks 3–20. A selected polygon shows a handle on every corner (drag to move it) and a rotation handle. Double-click it, or use *Handles: Corners / Resize* in the panel, to switch to normal resize handles. *Rounding* rounds all corners (in slide pixels; each corner is limited so arcs never overlap, and resizing keeps them circular). *Add corner* splits the longest side; *Remove corner* drops the corner that changes the outline least.
+- **Polygons:** the polygon button adds a shape with the last-used number of corners; the arrow next to it picks 3–20. A selected polygon shows a handle on every corner (drag to move it) and a rotation handle. Double-click it, or use _Handles: Corners / Resize_ in the panel, to switch to normal resize handles. _Rounding_ rounds all corners (in slide pixels; each corner is limited so arcs never overlap, and resizing keeps them circular). _Add corner_ splits the longest side; _Remove corner_ drops the corner that changes the outline least.
 - Dragging a text box's corner changes its font size; side handles change its wrap width. Text with a `maxHeight` (set through the API) shrinks while you type so it keeps fitting.
 - Keyboard (when the editor has focus): Delete, arrows (Shift = 10 px), Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y, Ctrl/Cmd+D, Enter to edit text, Esc to deselect.
 - Objects snap to the horizontal/vertical center of the slide.
@@ -221,26 +236,32 @@ Saving is last-write-wins: if a person edits the same slide in the editor while 
 Every key is optional; missing keys keep the built-in theme colors. Top-level keys apply in every theme, and keys under `dark` override them in dark mode (`theme: 'dark'`, or `'auto'` when the OS is dark).
 
 ```js
-SlideEditor.create('#editor', {
-  theme: 'auto',
+SlideEditor.create("#editor", {
+  theme: "auto",
   colors: {
-    accent: '#15803d',      // buttons, active toggles, sliders, focus rings
-    onAccent: '#ffffff',    // text on accent-colored buttons
-    background: '#f2f5f0',  // editor frame
-    surface: '#ffffff',     // toolbar, panel, popups, inputs
-    border: '#d9e2d3',
-    text: '#1a2e1f',
-    muted: '#5f7363',       // labels and hints
-    hover: '#e8efe4',       // button hover
-    stage: '#e1e8dc',       // area around the slide
-    selection: '#16a34a',   // selection frame and handles on the slide (default: accent)
-    guide: '#ea580c',       // center snapping lines
-    dark: { accent: '#4ade80', onAccent: '#052e16', background: '#0f1a12', surface: '#16241a', text: '#e7f2ea' }
-  }
+    accent: "#15803d", // buttons, active toggles, sliders, focus rings
+    onAccent: "#ffffff", // text on accent-colored buttons
+    background: "#f2f5f0", // editor frame
+    surface: "#ffffff", // toolbar, panel, popups, inputs
+    border: "#d9e2d3",
+    text: "#1a2e1f",
+    muted: "#5f7363", // labels and hints
+    hover: "#e8efe4", // button hover
+    stage: "#e1e8dc", // area around the slide
+    selection: "#16a34a", // selection frame and handles on the slide (default: accent)
+    guide: "#ea580c", // center snapping lines
+    dark: {
+      accent: "#4ade80",
+      onAccent: "#052e16",
+      background: "#0f1a12",
+      surface: "#16241a",
+      text: "#e7f2ea",
+    },
+  },
 });
 ```
 
-Values are CSS colors. Several editors on one page can each have their own colors. The demo page has a *UI colors* menu with example schemes, an accent picker and a theme switch.
+Values are CSS colors. Several editors on one page can each have their own colors. The demo page has a _UI colors_ menu with example schemes, an accent picker and a theme switch.
 
 ## Icons
 
@@ -256,7 +277,7 @@ The **Icons** button searches [Iconify](https://iconify.design) (free, no API ke
 
 ## SVG upload and color editing
 
-*Upload SVG…* at the bottom of the icon popup imports an SVG file as editable vector shapes (the **Image** button still adds any file, SVG included, as a flat picture).
+_Upload SVG…_ at the bottom of the icon popup imports an SVG file as editable vector shapes (the **Image** button still adds any file, SVG included, as a flat picture).
 
 - Selecting an imported SVG, or a multi-color icon or emoji from the search, shows a **Colors** section with one picker and transparency slider per distinct color (fills, outlines and gradient colors), most-used first. Changing a color recolors every part that uses it; **Reset colors** restores the originals.
 - Up to 12 colors are editable. Graphics with more colors show a short note and no pickers.

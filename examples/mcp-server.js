@@ -13,52 +13,86 @@
  * with the family name taken from the file name ("Archivo Black.ttf" → "Archivo Black",
  * "Inter-Bold.ttf" → family "Inter", weight bold).
  */
-'use strict';
+"use strict";
 
-const fs = require('fs');
-const path = require('path');
-const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
-const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
-const { ListToolsRequestSchema, CallToolRequestSchema } = require('@modelcontextprotocol/sdk/types.js');
-const { registerFont } = require('../src/slide-node.js');
-const { createSlideTools } = require('../src/slide-mcp-tools.js');
+const fs = require("fs");
+const path = require("path");
+const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
+const {
+  StdioServerTransport,
+} = require("@modelcontextprotocol/sdk/server/stdio.js");
+const {
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+} = require("@modelcontextprotocol/sdk/types.js");
+const { registerFont } = require("../src/slide-node.js");
+const { createSlideTools } = require("../src/slide-mcp-tools.js");
 
 // --- fonts -------------------------------------------------------------------
-const fontsDir = process.env.FONTS_DIR || path.join(__dirname, 'fonts');
+const fontsDir = process.env.FONTS_DIR || path.join(__dirname, "fonts");
 if (fs.existsSync(fontsDir)) {
-  for (const f of fs.readdirSync(fontsDir).filter(n => /\.(ttf|otf)$/i.test(n)).sort()) {
-    const base = f.replace(/\.(ttf|otf)$/i, '');
+  for (const f of fs
+    .readdirSync(fontsDir)
+    .filter((n) => /\.(ttf|otf)$/i.test(n))
+    .sort()) {
+    const base = f.replace(/\.(ttf|otf)$/i, "");
     const m = base.match(/^(.*?)[-_](Regular|Bold|Italic|BoldItalic)$/i);
-    const family = (m ? m[1] : base).replace(/[-_]+/g, ' ');
-    const style = m ? m[2].toLowerCase() : 'regular';
-    registerFont(path.join(fontsDir, f), { family, weight: /bold/.test(style) ? 'bold' : 'normal', style: /italic/.test(style) ? 'italic' : 'normal' });
+    const family = (m ? m[1] : base).replace(/[-_]+/g, " ");
+    const style = m ? m[2].toLowerCase() : "regular";
+    registerFont(path.join(fontsDir, f), {
+      family,
+      weight: /bold/.test(style) ? "bold" : "normal",
+      style: /italic/.test(style) ? "italic" : "normal",
+    });
   }
 }
 
 // --- storage (replace with your database) ------------------------------------
-const slidesDir = process.env.SLIDES_DIR || path.join(__dirname, 'slides');
+const slidesDir = process.env.SLIDES_DIR || path.join(__dirname, "slides");
 fs.mkdirSync(slidesDir, { recursive: true });
-const fileFor = id => {
-  if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) throw new Error('slideId may only contain letters, digits, "-" and "_" (max 64).');
-  return path.join(slidesDir, id + '.json');
+const fileFor = (id) => {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(id))
+    throw new Error(
+      'slideId may only contain letters, digits, "-" and "_" (max 64).',
+    );
+  return path.join(slidesDir, id + ".json");
 };
 const store = {
-  load: async id => { const f = fileFor(id); return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : null; },
-  save: async (id, json) => { fs.writeFileSync(fileFor(id), JSON.stringify(json)); }
+  load: async (id) => {
+    const f = fileFor(id);
+    return fs.existsSync(f) ? fs.readFileSync(f, "utf8") : null;
+  },
+  save: async (id, json) => {
+    fs.writeFileSync(fileFor(id), JSON.stringify(json));
+  },
 };
 
 // --- MCP wiring --------------------------------------------------------------
 const tools = createSlideTools({ store });
-const server = new Server({ name: 'slides', version: '1.0.0' }, { capabilities: { tools: {} } });
+const server = new Server(
+  { name: "slides", version: "1.0.0" },
+  { capabilities: { tools: {} } },
+);
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }))
+  tools: tools.map(({ name, description, inputSchema }) => ({
+    name,
+    description,
+    inputSchema,
+  })),
 }));
 
-server.setRequestHandler(CallToolRequestSchema, async req => {
-  const tool = tools.find(t => t.name === req.params.name);
-  if (!tool) return { isError: true, content: [{ type: 'text', text: 'Unknown tool: ' + req.params.name }] };
+server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  const tool = tools.find((t) => t.name === req.params.name);
+  if (!tool)
+    return {
+      isError: true,
+      content: [{ type: "text", text: "Unknown tool: " + req.params.name }],
+    };
   return tool.handler(req.params.arguments || {});
 });
 
-server.connect(new StdioServerTransport()).catch(err => { console.error(err); process.exit(1); });
+server.connect(new StdioServerTransport()).catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
