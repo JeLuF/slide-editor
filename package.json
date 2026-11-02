@@ -24,6 +24,7 @@
     "url": "git@github.com:JeLuF/slide-editor.git"
   },
   "exports": {
+    ".": "./src/slide-core.js",
     "./core": "./src/slide-core.js",
     "./editor": "./src/slide-editor.js",
     "./node": "./src/slide-node.js",
