@@ -159,8 +159,13 @@
         </select>
       </span>
       <span class="gap">
-        <a href="https://github.com/JeLuF/slide-editor"><button>&#x21AA; Github Source code</button></a>
-        <a href="https://www.npmjs.com/package/slide-editor"><button>&#x21AA; NPM package</button></a></span>
+        <a href="https://github.com/JeLuF/slide-editor"
+          ><button>&#x21AA; Github Source code</button></a
+        >
+        <a href="https://www.npmjs.com/package/slide-editor"
+          ><button>&#x21AA; NPM package</button></a
+        ></span
+      >
       <label class="btn"
         >Load JSON<input
           id="file"
@@ -168,6 +173,17 @@
           accept=".json,application/json"
           hidden
       /></label>
+      <select
+        id="example"
+        title="Load an example slide"
+        aria-label="Example slides"
+      >
+        <option value="">Load example…</option>
+        <option value="be-right-back">Be right back</option>
+        <option value="were-coming-back">We're coming back</option>
+        <option value="gray-green">Gray green</option>
+        <option value="pink">Pink</option>
+      </select>
       <button id="save">Download JSON</button>
       <button id="png">Export PNG</button>
     </header>
@@ -397,6 +413,22 @@
         a.href = URL.createObjectURL(blob);
         a.download = "slide.json";
         a.click();
+      };
+
+      const EXAMPLES =
+        "https://raw.githubusercontent.com/JeLuF/slide-editor/main/examples/slides/";
+      document.getElementById("example").onchange = async (e) => {
+        const sel = e.target;
+        const name = sel.value;
+        if (!name) return;
+        try {
+          const res = await fetch(EXAMPLES + name + ".json");
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          await editor.load(await res.json());
+        } catch (err) {
+          alert("Could not load the example: " + err.message);
+        }
+        sel.value = "";
       };
 
       document.getElementById("file").onchange = async (e) => {
