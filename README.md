@@ -58,7 +58,6 @@ const editor = SlideEditor.create(el, { width: 1920, height: 1080, fabric });
 | `background`        | `'#ffffff'`              | Color, `'transparent'`, or `{ type: 'linear' \| 'radial', colors: [c1, c2], angle }`                                                                                                                                                                    |
 | `backgroundOpacity` | `1`                      | Overall background opacity 0–1, multiplied with the colors' own alpha                                                                                                                                                                                   |
 | `fonts`             | web-safe list            | Font menu, in this order. Each entry is a name (already available, e.g. `'Arial'`), `{ name, url }` or `{ name, files: [{ url, weight, style }] }` (self-hosted, the editor loads it), or `{ name, google: 'Inter:wght@400;700' }` (loaded from Google) |
-| `googleFonts`       | `[]`                     | Older way to load Google Fonts (always listed first); prefer `fonts` with `google` entries                                                                                                                                                              |
 | `theme`             | `'light'`                | `'light'`, `'dark'` or `'auto'` (follows the OS)                                                                                                                                                                                                        |
 | `colors`            | built-in                 | UI colors, see [UI colors](#ui-colors)                                                                                                                                                                                                                  |
 | `historyLimit`      | `60`                     | Undo steps                                                                                                                                                                                                                                              |
@@ -288,7 +287,7 @@ _Upload SVG…_ at the bottom of the icon popup imports an SVG file as editable 
 ## Notes
 
 - Images are stored inside the JSON as data URLs, so a slide JSON is self-contained. If you'd rather store images on your server, upload them, call `addImage(url)` with the hosted URL (served with CORS headers), and the JSON keeps only the URL.
-- Fonts must be available wherever a slide is rendered: in the browser (`googleFonts` or your own CSS) and on the server (`registerFont`). `load()` waits for the fonts used in the slide before measuring text.
+- Fonts must be available wherever a slide is rendered: in the browser (a `fonts` entry with `url`, `files` or `google`, or your own CSS) and on the server (`registerFont`). `load()` waits for the fonts used in the slide before measuring text.
 
 ## Development
 

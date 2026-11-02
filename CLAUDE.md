@@ -51,7 +51,7 @@ The project grew from user requests in roughly this order; each item records the
 
 - **Starting point:** "simple slide generator to embed in a bigger project": place, move, rotate and crop graphics, add text, change font, color and size. Readymade editors were too big (HyCanvas, draw.io) or commercial (Polotno), so it's a Fabric.js-based component.
 - **Options at creation:** width/height of the slide; `load`/`toJSON`/`toPNG` API. Gradients (linear/radial, angle, **swap colors** button in every gradient editor), transparency per color and per object, **background opacity** (multiplies color alpha, stored separately in `backgroundStyle`).
-- **Fonts:** `googleFonts` loads via stylesheet; the editor waits for stylesheets and `document.fonts`, and re-measures all text on the `loadingdone` event (a bug where text stayed in a fallback font until the next click).
+- **Fonts:** `fonts` entries with `google` load via stylesheet (the old `googleFonts` option was removed); the editor waits for stylesheets and `document.fonts`, and re-measures all text on the `loadingdone` event (a bug where text stayed in a fallback font until the next click).
 - **Resizing must preview the final result.** Rect scale is baked into width/height _during_ the drag (`_bakeRectScale`) so rounded corners stay circular; n-gon scale is baked into its points (`_bakePolyScale`); text corner-drag becomes fontSize (`_normalizeText`); top/bottom handles are hidden on text; `noScaleCache: false` on these objects so Fabric redraws live. Before this, rects showed a stale cached image and text snapped back after release.
 - **Blob shapes:** 20 "organic round blobs" (Catmull-Rom splines through point lists in `BLOBS`), offered in a toolbar dropdown.
 - **N-gon tool:** split button (main part = last n, persisted in localStorage; arrow = picker 3–20). Every corner draggable (Fabric `controlsUtils.createPolyControls`) plus rotation handle; double-click / panel toggle "Corners | Resize". Panel: Add corner (splits the longest side), Remove corner (smallest triangle area). **Rounded corners**: custom class `SeNgon` (registered as `'SeNgon'` in Fabric's classRegistry; WeakMap-cached per Fabric instance because ES-module namespaces are read-only). It renders with `arcTo`, clamps each corner radius to half the adjacent sides, and has its own `_toSVG` (otherwise Fabric emits `<sengon>`). Old slides with plain `Polygon` n-gons are upgraded on load (`_upgradeNgons`).
@@ -81,7 +81,7 @@ The project grew from user requests in roughly this order; each item records the
 
 ## Open tasks / ideas
 
-- **Unified `fonts` option** (agreed, not yet built): one list where each entry says where the font comes from: `'Arial'` (already available), `{ name, url }` or `{ name, files: [{url, weight, style}] }` (self-hosted; the editor creates @font-face), `{ name, google: 'Spec' }`. Menu order = list order. Keep `googleFonts` working but document the new form; switch the demo to self-hosted fonts (GDPR).
+- **Self-hosted demo fonts:** the unified `fonts` option is built (`'Arial'`, `{ name, url }`, `{ name, files }`, `{ name, google }`; menu order = list order). Still to do: switch the demo from Google to self-hosted font files (GDPR).
 - Combined CDN file (core + editor in one script) for jsDelivr users.
 - npm publishing via GitHub Actions with trusted publishing (provenance), triggered by version tags.
 - Optional `main` field in package.json for tools that don't read `exports`.

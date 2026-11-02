@@ -251,7 +251,6 @@
           height: 1080,
           background: "#ffffff",
           fonts: DEFAULT_FONTS,
-          googleFonts: [],
           icons: true, // false hides the Icons button; or { api, filters }
           theme: "light",
           colors: null, // UI colors, see README: { accent, surface, text, …, dark: { … } }
@@ -274,7 +273,7 @@
           : container;
       if (!this.container) throw new Error("SlideEditor: container not found.");
 
-      this.fonts = this._prepareFonts(opts.fonts, opts.googleFonts);
+      this.fonts = this._prepareFonts(opts.fonts);
 
       this._history = [];
       this._hIndex = -1;
@@ -627,7 +626,7 @@
 
     /* ======================= setup ======================= */
 
-    _prepareFonts(fonts, google) {
+    _prepareFonts(fonts) {
       this._fontSheets = [];
       const web = typeof document !== "undefined";
       const googleHref = (spec) =>
@@ -658,13 +657,6 @@
           });
         }
         return { name: f.name };
-      });
-      // Legacy option: googleFonts are put in front of the list.
-      (google || []).forEach((spec) => {
-        const name = String(spec).split(":")[0].trim();
-        if (!list.some((f) => f.name === name))
-          list.unshift({ name, google: true });
-        if (web) this._fontSheets.push(loadStylesheet(googleHref(spec)));
       });
       if (!list.length) list.push({ name: "Arial" });
       return list;

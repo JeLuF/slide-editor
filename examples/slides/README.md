@@ -16,7 +16,7 @@ fs.writeFileSync(
 | `were-coming-back.json` | 1920×1080 | gradient light streaks, text with a tilted letter         |
 | `be-right-back.json`    | 1920×1080 | starfield, blob bands, emoji illustrations, outlined text |
 
-Both use the free font [Archivo Black](https://fonts.google.com/specimen/Archivo+Black) (SIL Open Font License), which is not included: load it in the browser (`googleFonts: ['Archivo Black']`) and register its TTF file on a server.
+Both use the free font [Archivo Black](https://fonts.google.com/specimen/Archivo+Black) (SIL Open Font License), which is not included: load it in the browser (`fonts: [{ name: 'Archivo Black', google: 'Archivo Black' }]`) and register its TTF file on a server.
 
 ## Credits
 
