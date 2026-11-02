@@ -1,0 +1,49 @@
+# Publishes the demo (docs/) together with the current source files (src/) to GitHub Pages
+# on every push to main. Repository setting needed once:
+#   Settings → Pages → Build and deployment → Source: "GitHub Actions"
+name: Demo on GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble the site (demo + current sources)
+        run: |
+          set -e
+          mkdir -p _site
+          cp -r docs/. _site/
+          cp -r src _site/src
+          cp -r examples/slides _site/slides
+          # The demo loads the published npm package from jsDelivr when it isn't opened locally.
+          # On Pages, use the sources from this commit instead.
+          CDN='https://cdn.jsdelivr.net/npm/slide-editor@1/src/'
+          grep -q "$CDN" _site/index.html || { echo "CDN path not found in docs/index.html"; exit 1; }
+          sed -i "s#$CDN#./src/#g" _site/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
