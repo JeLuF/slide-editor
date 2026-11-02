@@ -1,0 +1,61 @@
+{
+  "name": "slide-editor",
+  "version": "1.0.0",
+  "description": "Embeddable slide / announcement-screen editor for the browser, with a shared document core for server-side PNG/SVG rendering and MCP tools for AI agents.",
+  "keywords": [
+    "slides",
+    "slide-editor",
+    "editor",
+    "canvas",
+    "fabricjs",
+    "announcement",
+    "live-stream",
+    "overlay",
+    "svg",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "license": "0BSD",
+  "author": "JeLuF",
+  "exports": {
+    "./core": "./src/slide-core.js",
+    "./editor": "./src/slide-editor.js",
+    "./node": "./src/slide-node.js",
+    "./mcp": "./src/slide-mcp-tools.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/",
+    "examples/mcp-server.js",
+    "examples/slides/",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "mcp": "node examples/mcp-server.js",
+    "pack:check": "npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "canvas": "^3.0.0",
+    "fabric": ">=6.0.0",
+    "jsdom": ">=24.0.0"
+  },
+  "peerDependenciesMeta": {
+    "canvas": {
+      "optional": true
+    },
+    "jsdom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "canvas": "^3.2.0",
+    "fabric": "7.4.0",
+    "jsdom": "^30.1.0",
+    "prettier": "3.9.10"
+  }
+}

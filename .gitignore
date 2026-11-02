@@ -1,0 +1,8 @@
+node_modules/
+*.tgz
+.DS_Store
+# written by examples/mcp-server.js
+examples/slides/*.json
+!examples/slides/be-right-back.json
+!examples/slides/were-coming-back.json
+examples/fonts/

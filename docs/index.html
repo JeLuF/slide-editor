@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SlideEditor demo</title>
+    <style>
+      body {
+        margin: 0;
+        font:
+          14px/1.4 system-ui,
+          sans-serif;
+        background: #fafafa;
+        color: #18181b;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-bottom: 1px solid #e4e4e7;
+        background: #fff;
+      }
+      header h1 {
+        font-size: 15px;
+        margin: 0 12px 0 0;
+      }
+      header input {
+        width: 72px;
+        height: 30px;
+        padding: 0 6px;
+        border: 1px solid #d4d4d8;
+        border-radius: 6px;
+        font: inherit;
+      }
+      header select {
+        height: 30px;
+        padding: 0 6px;
+        border: 1px solid #d4d4d8;
+        border-radius: 6px;
+        background: #fff;
+        font: inherit;
+      }
+      header input[type="color"] {
+        width: 34px;
+        padding: 2px;
+      }
+      .grp {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding-left: 10px;
+        margin-left: 4px;
+        border-left: 1px solid #e4e4e7;
+      }
+      header button,
+      header label.btn {
+        height: 30px;
+        padding: 0 12px;
+        border: 1px solid #d4d4d8;
+        border-radius: 6px;
+        background: #fff;
+        font: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+      }
+      header button:hover,
+      header label.btn:hover {
+        background: #f4f4f5;
+      }
+      .gap {
+        flex: 1;
+      }
+      #editor {
+        height: calc(100vh - 52px - 180px);
+        min-height: 460px;
+        padding: 12px 16px 0;
+        box-sizing: border-box;
+      }
+      #out {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        padding: 12px 16px;
+      }
+      #out img {
+        max-height: 150px;
+        max-width: 45vw;
+        border: 1px solid #e4e4e7;
+        background: repeating-conic-gradient(#e4e4e7 0 25%, #fff 0 50%) 0 0/14px
+          14px;
+      }
+      #out pre {
+        flex: 1;
+        margin: 0;
+        max-height: 150px;
+        overflow: auto;
+        font-size: 11px;
+        background: #fff;
+        border: 1px solid #e4e4e7;
+        padding: 8px;
+      }
+    </style>
+
+    <!-- 1. Fabric.js (v6 or newer) -->
+    <script src="https://cdn.jsdelivr.net/npm/fabric@7.4.0/dist/index.min.js"></script>
+    <!-- 2. SlideCore (document model), 3. SlideEditor (user interface).
+       In a local checkout the files come from ../src; on GitHub Pages (or anywhere else)
+       from the published npm package via jsDelivr. -->
+    <script>
+      (function () {
+        var local = /^(file:|https?:\/\/(localhost|127\.0\.0\.1)[:/])/.test(
+          location.href,
+        );
+        var base = local
+          ? "../src/"
+          : "https://cdn.jsdelivr.net/npm/slide-editor@1/src/";
+        document.write(
+          '<script src="' +
+            base +
+            'slide-core.js"><\/script><script src="' +
+            base +
+            'slide-editor.js"><\/script>',
+        );
+      })();
+    </script>
+  </head>
+  <body>
+    <header>
+      <h1>SlideEditor</h1>
+      W <input id="w" type="number" value="1920" /> H
+      <input id="h" type="number" value="1080" />
+      <button id="new">New slide</button>
+      <span class="grp">
+        <label for="scheme">UI colors</label>
+        <select id="scheme">
+          <option value="default">Default</option>
+          <option value="forest">Forest (green)</option>
+          <option value="sunset">Sunset (orange, warm)</option>
+          <option value="ocean">Ocean (dark blue)</option>
+          <option value="contrast">High contrast</option>
+        </select>
+        <input
+          id="accent"
+          type="color"
+          value="#2563eb"
+          title="Accent color"
+          aria-label="Accent color"
+        />
+        <select id="theme" title="Theme" aria-label="Theme">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="auto">Auto</option>
+        </select>
+      </span>
+      <span class="gap"></span>
+      <label class="btn"
+        >Load JSON<input
+          id="file"
+          type="file"
+          accept=".json,application/json"
+          hidden
+      /></label>
+      <button id="save">Download JSON</button>
+      <button id="png">Export PNG</button>
+    </header>
+
+    <div id="editor"></div>
+    <div id="out">
+      <img
+        id="preview"
+        alt="Last exported PNG"
+        title="Last exported PNG"
+        hidden
+      />
+      <pre id="json"></pre>
+    </div>
+
+    <script>
+      let editor;
+
+      // UI color schemes for the `colors` option. Every key is optional; `dark` overrides apply in dark mode.
+      const SCHEMES = {
+        default: null,
+        forest: {
+          accent: "#15803d",
+          background: "#f2f5f0",
+          surface: "#ffffff",
+          border: "#d9e2d3",
+          text: "#1a2e1f",
+          muted: "#5f7363",
+          hover: "#e8efe4",
+          stage: "#e1e8dc",
+          selection: "#16a34a",
+          guide: "#ea580c",
+          dark: {
+            accent: "#4ade80",
+            onAccent: "#052e16",
+            background: "#0f1a12",
+            surface: "#16241a",
+            border: "#2a3d2f",
+            text: "#e7f2ea",
+            muted: "#93a897",
+            hover: "#203327",
+            stage: "#0a120c",
+          },
+        },
+        sunset: {
+          accent: "#ea580c",
+          background: "#fdf6f0",
+          surface: "#fffaf5",
+          border: "#f0dccb",
+          text: "#3b1d0b",
+          muted: "#8a6650",
+          hover: "#fbeee2",
+          stage: "#f5e6d8",
+          selection: "#ea580c",
+          guide: "#7c3aed",
+          dark: {
+            accent: "#fb923c",
+            onAccent: "#3b1d0b",
+            background: "#1c120c",
+            surface: "#271910",
+            border: "#44301f",
+            text: "#fdeee2",
+            muted: "#b8957c",
+            hover: "#352215",
+            stage: "#120b07",
+          },
+        },
+        ocean: {
+          accent: "#38bdf8",
+          onAccent: "#082f49",
+          background: "#0b1726",
+          surface: "#102236",
+          border: "#1f3a56",
+          text: "#e0f2fe",
+          muted: "#8fb3cc",
+          hover: "#17304a",
+          stage: "#06101c",
+          selection: "#38bdf8",
+          guide: "#f472b6",
+        },
+        contrast: {
+          accent: "#000000",
+          onAccent: "#ffffff",
+          background: "#ffffff",
+          surface: "#ffffff",
+          border: "#000000",
+          text: "#000000",
+          muted: "#333333",
+          hover: "#e5e5e5",
+          stage: "#bdbdbd",
+          selection: "#d00000",
+          guide: "#0050ff",
+          dark: {
+            accent: "#ffff00",
+            onAccent: "#000000",
+            background: "#000000",
+            surface: "#000000",
+            border: "#ffffff",
+            text: "#ffffff",
+            muted: "#dddddd",
+            hover: "#333333",
+            stage: "#444444",
+            selection: "#ffff00",
+          },
+        },
+      };
+
+      function currentColors() {
+        const base = SCHEMES[document.getElementById("scheme").value];
+        const accent = document.getElementById("accent").value;
+        const c = Object.assign({}, base || {}, { accent, selection: accent });
+        return c;
+      }
+
+      document.getElementById("scheme").onchange = () => {
+        const s = SCHEMES[document.getElementById("scheme").value];
+        document.getElementById("accent").value = s
+          ? s.selection || s.accent
+          : "#2563eb";
+        editor.setColors(currentColors());
+      };
+      document.getElementById("accent").oninput = () =>
+        editor.setColors(currentColors());
+      document.getElementById("theme").onchange = (e) =>
+        editor.setTheme(e.target.value);
+
+      function createEditor(width, height) {
+        if (editor) editor.destroy();
+        editor = SlideEditor.create("#editor", {
+          width,
+          height,
+          background: {
+            type: "linear",
+            colors: ["#0f172a", "#1e3a8a"],
+            angle: 135,
+          },
+          googleFonts: [
+            "Inter:wght@400;700",
+            "Bebas Neue",
+            "Archivo Black",
+            "Playfair Display:ital,wght@0,400;0,700;1,400",
+	    "Ovo",
+            "Work Sans:ital,wght@0,200;1,200;0,400;1,400;0,700;1,700;0,900;1,900",
+	    "Josefin Sans",
+          ],
+          fonts: ["Arial", "Georgia", "Courier New", "Impact", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Garamond", "Brush Script MT"],
+          theme: document.getElementById("theme").value,
+          colors: currentColors(),
+        });
+        editor.on("change", () => {
+          document.getElementById("json").textContent = JSON.stringify(
+            editor.toJSON(),
+            (k, v) =>
+              typeof v === "string" && v.length > 120
+                ? v.slice(0, 60) + "…"
+                : v,
+            2,
+          );
+        });
+
+        // A starter layout so there is something to play with
+        editor.addShape("rect", {
+          left: width / 2,
+          top: height * 0.78,
+          width: width * 0.7,
+          height: height * 0.12,
+          rx: height * 0.03,
+          ry: height * 0.03,
+          fill: {
+            type: "linear",
+            colors: ["rgba(236,72,153,0.9)", "rgba(249,115,22,0.9)"],
+            angle: 0,
+          },
+        });
+        editor.addText("LIVE IN 5 MINUTES", {
+          top: height * 0.4,
+          fontFamily: "Bebas Neue",
+          fontSize: Math.round(height * 0.16),
+          fill: "#ffffff",
+        });
+        editor.addText("Grab a coffee — we start at 19:30", {
+          top: height * 0.78,
+          fontFamily: "Inter",
+          fontSize: Math.round(height * 0.045),
+          fill: "#ffffff",
+        });
+      }
+
+      createEditor(1920, 1080);
+
+      document.getElementById("new").onclick = () =>
+        createEditor(
+          +document.getElementById("w").value || 1920,
+          +document.getElementById("h").value || 1080,
+        );
+
+      document.getElementById("png").onclick = () => {
+        const url = editor.toPNG();
+        const prev = document.getElementById("preview");
+        prev.src = url;
+        prev.hidden = false;
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "slide.png";
+        a.click();
+      };
+
+      document.getElementById("save").onclick = () => {
+        const blob = new Blob([JSON.stringify(editor.toJSON())], {
+          type: "application/json",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "slide.json";
+        a.click();
+      };
+
+      document.getElementById("file").onchange = async (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        await editor.load(await f.text());
+        e.target.value = "";
+      };
+    </script>
+  </body>
+</html>
