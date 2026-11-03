@@ -34,7 +34,6 @@
   "files": [
     "src/",
     "examples/mcp-server.js",
-    "examples/slides/",
     "CHANGELOG.md"
   ],
   "scripts": {
