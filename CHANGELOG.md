@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1 — 2026-11-03
+
+- **Editor:** fixed single-color icons that are a single path: selecting one threw `getObjects is not a function`, left the Color section empty and made the slide unclickable.
+
 ## 1.4.0 — 2026-11-03
 
 - **MCP:** `createSlideTools({ iconApi })` sends icon search and icon data requests to your own Iconify API server (`http:`/`https:` URL, a path prefix is fine, no credentials, query or fragment; invalid values throw). `iconFilters` (`[{ key, label, prefixes }]`) limits `search_icons` to the icon sets that server offers. Both are server options and are never saved in the slide JSON. `examples/mcp-server.js` reads `ICONIFY_API`.

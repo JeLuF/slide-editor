@@ -2939,7 +2939,7 @@
 
     _panelIconColor(o) {
       const s = this._section("Color");
-      const parts = o.getObjects();
+      const parts = typeof o.getObjects === "function" ? o.getObjects() : [o];
       const first =
         parts.find((p) => typeof p.fill === "string" && p.fill !== "none") ||
         parts.find((p) => typeof p.stroke === "string");
