@@ -21,7 +21,7 @@
   "bugs": "https://github.com/JeLuF/slide-editor/issues",
   "repository": {
     "type": "git",
-    "url": "git@github.com:JeLuF/slide-editor.git"
+    "url": "git+ssh://git@github.com/JeLuF/slide-editor.git"
   },
   "exports": {
     ".": "./src/slide-core.js",
