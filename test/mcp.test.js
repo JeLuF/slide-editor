@@ -195,3 +195,119 @@ test("render_slide prepares Google Fonts when the host passes googleFonts", asyn
   assert.ok(calls.length >= 2);
   assert.ok(calls.every((u) => /fonts\.(googleapis|gstatic)\.com/.test(u)));
 });
+
+/* ======================= iconApi ======================= */
+
+function recordingTools(opts) {
+  const urls = [];
+  const saved = global.fetch;
+  global.fetch = async (url, init) => {
+    urls.push(String(url));
+    // answer as the default host so the stand-in handles the path
+    return fakeFetch(
+      String(url).replace(/^https?:\/\/[^/]+(\/iconify)?/, "https://x"),
+      init,
+    );
+  };
+  const store = memoryStore();
+  const tools = createSlideTools(Object.assign({ store }, opts));
+  const byName = Object.fromEntries(tools.map((t) => [t.name, t]));
+  const call = (name, args) => byName[name].handler(args);
+  return { urls, store, call, restore: () => (global.fetch = saved) };
+}
+
+for (const [label, api, prefix] of [
+  ["trailing slash", "http://icons.test:3000/", "http://icons.test:3000"],
+  ["path prefix", "http://icons.test/iconify", "http://icons.test/iconify"],
+]) {
+  test("iconApi: search and icon data use it (" + label + ")", async () => {
+    const t = recordingTools({
+      iconApi: api,
+      iconFilters: [{ key: "icons", label: "Icons", prefixes: ["test"] }],
+    });
+    try {
+      await t.call("search_icons", { query: "dot" });
+      assert.ok(t.urls[0].startsWith(prefix + "/search?query=dot"), t.urls[0]);
+      assert.match(t.urls[0], /prefixes=test/);
+      await t.call("create_slide", { slideId: "a" });
+      await t.call("add_element", {
+        slideId: "a",
+        element: { type: "icon", icon: "test:dot" },
+      });
+      assert.ok(
+        t.urls.some((u) => u.startsWith(prefix + "/test.json?icons=dot")),
+      );
+      assert.ok(
+        t.urls.every((u) => u.startsWith(prefix + "/")),
+        t.urls.join(),
+      );
+      assert.ok(
+        !JSON.stringify(await t.store.load("a")).includes("icons.test"),
+      );
+    } finally {
+      t.restore();
+    }
+  });
+}
+
+test("iconApi: default is the public API, JSON has no iconApi", async () => {
+  const t = recordingTools({});
+  try {
+    await t.call("search_icons", { query: "dot" });
+    await t.call("create_slide", { slideId: "a" });
+    await t.call("add_element", {
+      slideId: "a",
+      element: { type: "icon", icon: "test:dot" },
+    });
+    assert.ok(t.urls.length >= 2);
+    assert.ok(t.urls.every((u) => u.startsWith("https://api.iconify.design/")));
+    const json = JSON.stringify(await t.store.load("a"));
+    assert.ok(!/iconApi|api\.iconify/.test(json));
+  } finally {
+    t.restore();
+  }
+});
+
+test("iconApi: saved JSON never contains the server URL", async () => {
+  const t = recordingTools({ iconApi: "http://icons.test:3000" });
+  try {
+    await t.call("create_slide", { slideId: "a" });
+    await t.call("add_element", {
+      slideId: "a",
+      element: { type: "icon", icon: "test:dot" },
+    });
+    assert.ok(
+      !/iconApi|icons\.test/.test(JSON.stringify(await t.store.load("a"))),
+    );
+  } finally {
+    t.restore();
+  }
+});
+
+test("iconApi / iconFilters: invalid values throw from createSlideTools", () => {
+  const store = memoryStore();
+  for (const bad of [
+    "ftp://x",
+    "http://user:pw@x",
+    "not a url",
+    "http://x/?a=1",
+    "http://x/#f",
+    42,
+  ])
+    assert.throws(() => createSlideTools({ store, iconApi: bad }), /iconApi/);
+  assert.throws(
+    () => createSlideTools({ store, iconFilters: [{ key: "a" }] }),
+    /iconFilters/,
+  );
+  assert.throws(
+    () => createSlideTools({ store, iconFilters: "mdi" }),
+    /iconFilters/,
+  );
+  assert.doesNotThrow(() =>
+    createSlideTools({
+      store,
+      iconApi: "https://x.test/iconify/",
+      iconFilters: [{ key: "k", label: "K", prefixes: ["mdi"] }],
+    }),
+  );
+});

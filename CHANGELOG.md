@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0 — 2026-11-03
+
+- **MCP:** `createSlideTools({ iconApi })` sends icon search and icon data requests to your own Iconify API server (`http:`/`https:` URL, a path prefix is fine, no credentials, query or fragment; invalid values throw). `iconFilters` (`[{ key, label, prefixes }]`) limits `search_icons` to the icon sets that server offers. Both are server options and are never saved in the slide JSON. `examples/mcp-server.js` reads `ICONIFY_API`.
+- **Editor:** a top-level `iconApi` option is used when `icons.api` is not set.
+
 ## 1.3.0 — 2026-11-03
 
 - **Node:** Google Fonts imported in the editor now render on the server. `prepareFonts(json, { cacheDir, fetch, timeoutMs, maxBytes, … })` downloads the TrueType files, caches them per family, weight and style and registers them under the slide's font name; `loadSlide`, `renderPNG` and `renderSVG` take `googleFonts` to do this first, and `createSlideTools({ googleFonts })` does the same for the MCP tools. Only the Google hosts are contacted, specs are validated, downloads have a timeout and a size limit. A failed download falls back as before and `describe()` still reports `font-missing`; registered fonts are no longer reported. Saved text sizes are measured again on load for fonts that are installed on the server.

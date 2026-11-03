@@ -75,6 +75,49 @@ function propSchema() {
   return props;
 }
 
+/** Base URL of an Iconify API server: http(s), no credentials, query or fragment; a path prefix is fine. */
+function checkIconApi(v) {
+  if (v == null || v === "") return null;
+  const bad = (why) =>
+    new Error(
+      'createSlideTools: iconApi must be the http(s) URL of an Iconify API server, e.g. "http://iconify:3000" (' +
+        why +
+        ").",
+    );
+  if (typeof v !== "string") throw bad("got " + typeof v);
+  let u;
+  try {
+    u = new URL(v);
+  } catch (_) {
+    throw bad('"' + v + '" is not a URL');
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:")
+    throw bad("protocol " + u.protocol + " is not allowed");
+  if (u.username || u.password) throw bad("no credentials in the URL");
+  if (u.search || u.hash || /[?#]/.test(v)) throw bad("no query or fragment");
+  return v.replace(/\/+$/, "");
+}
+
+function checkIconFilters(v) {
+  if (v == null) return null;
+  const ok =
+    Array.isArray(v) &&
+    v.length > 0 &&
+    v.every(
+      (f) =>
+        f &&
+        typeof f.key === "string" &&
+        typeof f.label === "string" &&
+        Array.isArray(f.prefixes) &&
+        f.prefixes.every((p) => typeof p === "string"),
+    );
+  if (!ok)
+    throw new Error(
+      "createSlideTools: iconFilters must be a non-empty array of { key, label, prefixes: [...] }.",
+    );
+  return v;
+}
+
 function createSlideTools(options) {
   const o = Object.assign({ previewMaxWidth: 960 }, options || {});
   const store = o.store;
@@ -87,6 +130,16 @@ function createSlideTools(options) {
       "createSlideTools: pass { store: { load(slideId), save(slideId, json) } }",
     );
   }
+
+  const iconApi = checkIconApi(o.iconApi);
+  const iconFilters = checkIconFilters(o.iconFilters);
+  // Document options shared by every document the tools create or load (server options, never saved in the slide).
+  const docOpts = (extra) => {
+    const d = Object.assign({}, extra);
+    if (iconApi) d.iconApi = iconApi;
+    if (iconFilters) d.icons = { filters: iconFilters };
+    return d;
+  };
 
   const userError = (msg) => {
     const e = new Error(msg);
@@ -112,7 +165,7 @@ function createSlideTools(options) {
       );
     return S.loadSlide(
       json,
-      o.googleFonts ? { googleFonts: o.googleFonts } : undefined,
+      docOpts(o.googleFonts ? { googleFonts: o.googleFonts } : undefined),
     );
   }
 
@@ -197,11 +250,13 @@ function createSlideTools(options) {
               a.slideId +
               '" already exists. Pass overwrite: true to replace it.',
           );
-        const doc = S.createSlide({
-          width: a.width || 1920,
-          height: a.height || 1080,
-          background: a.background == null ? "#ffffff" : a.background,
-        });
+        const doc = S.createSlide(
+          docOpts({
+            width: a.width || 1920,
+            height: a.height || 1080,
+            background: a.background == null ? "#ffffff" : a.background,
+          }),
+        );
         await store.save(a.slideId, doc.toJSON());
         return text({
           created: a.slideId,
@@ -409,7 +464,7 @@ function createSlideTools(options) {
         required: ["query"],
       },
       async handler(a) {
-        const doc = S.createSlide();
+        const doc = S.createSlide(docOpts());
         return text(
           await doc.searchIcons(a.query, {
             set: a.set || "icons",

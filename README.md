@@ -70,6 +70,7 @@ const editor = SlideEditor.create(el, { width: 1920, height: 1080, fabric });
 | `defaultShapeColor` | `'#2563eb'`              |                                                                                                                                                                                                                                                         |
 | `defaultIconColor`  | auto                     | Color of newly added single-color icons; `null` picks black or white depending on the background                                                                                                                                                        |
 | `icons`             | `true`                   | Icon search. `false` hides the button. Or `{ api: 'https://icons.example.com', filters: [{ key: 'icons', label: 'Icons', prefixes: ['mdi', 'ph'] }, …] }` to use your own Iconify server or set lists                                                   |
+| `iconApi`           | public Iconify API       | Shorthand for `icons.api` (used when `icons.api` is not set)                                                                                                                                                                                            |
 | `fabric`            | `window.fabric`          | Pass the Fabric module when not using the global build                                                                                                                                                                                                  |
 | `onChange`          | –                        | Same as `editor.on('change', fn)`                                                                                                                                                                                                                       |
 
@@ -215,6 +216,8 @@ const tools = createSlideTools({
   },
   previewMaxWidth: 960,
   googleFonts: { cacheDir: "/var/cache/slide-fonts" }, // optional: render imported Google Fonts, see above
+  iconApi: "http://iconify:3000", // optional: your own Iconify API server (default: api.iconify.design)
+  iconFilters: [{ key: "icons", label: "Icons", prefixes: ["mdi", "ph"] }], // optional: icon sets search_icons offers
 });
 // tools: [{ name, description, inputSchema (JSON Schema), handler(args) → CallToolResult }]
 ```
@@ -300,7 +303,7 @@ The **Icons** button searches [Iconify](https://iconify.design) (free, no API ke
 - The icon is saved inside the slide JSON, so slides don't depend on the icon service after editing.
 - Requests are kept low: thumbnails for a search page are loaded in one batch per icon set (usually 2–5 requests per search instead of one per icon), searches and icons are cached for the session, and search starts after 2 letters and a short typing pause. If the service answers "429 Too Many Requests", the picker pauses for the time the server asks (default 60 s) and says so.
 - The public Iconify API is meant for moderate use and has unpublished limits. For production, especially with many editors or a busy backend, host the API yourself.
-- Privacy: the public API at `api.iconify.design` sees your users' IP addresses and search words. To avoid that, [host the Iconify API yourself](https://iconify.design/docs/api/hosting.html) and set `icons: { api: 'https://your-server' }` (editor) or `iconApi` (headless documents).
+- Privacy: the public API at `api.iconify.design` sees your users' IP addresses and search words. To avoid that, [host the Iconify API yourself](https://iconify.design/docs/api/hosting.html) and set `icons: { api: 'https://your-server' }` (editor) or `iconApi` (headless documents; also top-level `iconApi` in the editor, and `createSlideTools({ iconApi })` for the MCP tools). `iconApi` is a server option and is never saved in the slide JSON.
 
 ## SVG upload and color editing
 

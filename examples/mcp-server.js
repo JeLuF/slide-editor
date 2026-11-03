@@ -72,7 +72,9 @@ const store = {
 const googleFonts = process.env.GOOGLE_FONTS_CACHE
   ? { cacheDir: process.env.GOOGLE_FONTS_CACHE }
   : undefined;
-const tools = createSlideTools({ store, googleFonts });
+// ICONIFY_API=http://iconify:3000 sends icon search and icon data to your own Iconify API server.
+const iconApi = process.env.ICONIFY_API || undefined;
+const tools = createSlideTools({ store, googleFonts, iconApi });
 const server = new Server(
   { name: "slides", version: "1.0.0" },
   { capabilities: { tools: {} } },

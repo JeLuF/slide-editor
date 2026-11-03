@@ -1,6 +1,6 @@
 {
   "name": "slide-editor",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Embeddable slide / announcement-screen editor for the browser, with a shared document core for server-side PNG/SVG rendering and MCP tools for AI agents.",
   "keywords": [
     "slides",

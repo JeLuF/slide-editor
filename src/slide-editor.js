@@ -2517,6 +2517,8 @@
         { api: "https://api.iconify.design", filters: DEFAULT_ICON_FILTERS },
         typeof o === "object" ? o : {},
       );
+      if (!(typeof o === "object" && o.api) && this.opts.iconApi)
+        cfg.api = this.opts.iconApi;
       cfg.api = String(cfg.api).replace(/\/+$/, "");
       return cfg;
     }
